@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="google-site-verification" content="xBT4GhYoi5qRD5tr338pgPM5OWHHIDR6mNg1a3euekI" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="keyword"  content="">
+    <link rel="shortcut icon" href="/img/favicon.ico">
+
+    <title>
+        
+        Android IPC 之 AIDL（一） - undefined
+        
+    </title>
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/aircloud.css">
+    <link rel="stylesheet" href="/css/gitment.css">
+    <!--<link rel="stylesheet" href="https://imsun.github.io/gitment/style/default.css">-->
+    <link href="//at.alicdn.com/t/font_620856_pl6z7sid89qkt9.css" rel="stylesheet" type="text/css">
+    <!-- ga & ba script hoook -->
+    <script></script>
+</head>
+
+<body>
+
+<div class="site-nav-toggle" id="site-nav-toggle">
+    <button>
+        <span class="btn-bar"></span>
+        <span class="btn-bar"></span>
+        <span class="btn-bar"></span>
+    </button>
+</div>
+
+<div class="index-about">
+    <i> sometimes ever, sometimes nerver </i>
+</div>
+
+<div class="index-container">
+    
+    <div class="index-left">
+        
+<div class="nav" id="nav">
+    <div class="avatar-name">
+        <div class="avatar">
+            <img src="/img/avator.jpg" />
+        </div>
+        <div class="name">
+            <i>Vera</i>
+        </div>
+    </div>
+    <div class="contents" id="nav-content">
+        <ul>
+            <li >
+                <a href="/">
+                    <i class="iconfont icon-shouye1"></i>
+                    <span>主页</span>
+                </a>
+            </li>
+            <li >
+                <a href="/tags">
+                    <i class="iconfont icon-biaoqian1"></i>
+                    <span>标签</span>
+                </a>
+            </li>
+            <li >
+                <a href="/archives">
+                    <i class="iconfont icon-guidang2"></i>
+                    <span>存档</span>
+                </a>
+            </li>
+            <li >
+                <a href="/about/">
+                    <i class="iconfont icon-guanyu2"></i>
+                    <span>关于</span>
+                </a>
+            </li>
+            
+            <li>
+                <a id="search">
+                    <i class="iconfont icon-sousuo1"></i>
+                    <span>搜索</span>
+                </a>
+            </li>
+            
+        </ul>
+    </div>
+    
+        <div id="toc" class="toc-article">
+    
+</div>
+    
+</div>
+
+
+<div class="search-field" id="search-field">
+    <div class="search-container">
+        <div class="search-input">
+            <span id="esc-search"> <i class="icon-fanhui iconfont"></i></span>
+            <input id="search-input"/>
+            <span id="begin-search">搜索</span>
+        </div>
+        <div class="search-result-container" id="search-result-container">
+
+        </div>
+    </div>
+</div>
+        <div class="index-about-mobile">
+            <i> sometimes ever, sometimes nerver </i>
+        </div>
+    </div>
+    
+    <div class="index-middle">
+        <!-- Main Content -->
+        
+
+
+<div class="post-container">
+    <div class="post-title">
+        Android IPC 之 AIDL（一）
+    </div>
+
+    <div class="post-meta">
+        <span class="attr">发布于：<span>2018-05-08 12:34:43</span></span>
+        
+        <span class="attr">标签：/
+        
+        <a class="tag" href="/tags/#Android" title="Android">Android</a>
+        <span>/</span>
+        
+        
+        </span>
+        <span class="attr">访问：<span id="busuanzi_value_page_pv"></span>
+</span>
+</span>
+    </div>
+    <div class="post-content ">
+        <p>IPC是Inter-Process Communication的缩写，即跨进程通信。Android中跨进程通信有多种方式，如Intent、文件共享、使用ContentProvider、Broadcast、和Socket等。比较复杂的情况下，常用的两种方式为Messenger和AIDL,而Messenger的底层实现又是AIDL。</p>
+<p>首先不看别的，先来看一下AIDL是如何使用的。</p>
+<p>假设我们现在有一个两数相加的任务，客户端没办法完成（别问我它为什么完不成==，咱举栗子简单点哈~），需要将任务交给另一个进程中的服务端完成，再从服务端获取到该任务的结果。</p>
+<p>我们首先如下图方式创建一个AIDL接口：</p>
+<p><img src="/img/01.png" alt=""></p>
+<p>Android Studio会自动为它生成一个路径，如下图：</p>
+<p><img src="/img/02.png" alt=""></p>
+<p>在该文件中声明一个接口以及一个我们想让服务端实现的接口方法。如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.vera.aidltest;</span><br><span class="line"><span class="class"><span class="keyword">interface</span> <span class="title">IMyAdd</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">int</span> <span class="title">myAdd</span><span class="params">(<span class="keyword">int</span> num_a,<span class="keyword">int</span> num_b)</span></span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>注意，并不是所有数据类型都能在AIDL文件中使用，AIDL文件只支持以下几种数据类型：</p>
+<ul>
+<li>Java 中的基本数据类型</li>
+<li>String 和CharSequence</li>
+<li>List 和 Map ,且List和Map 对象的元素必须是AIDL支持的数据类型</li>
+<li>AIDL 自动生成的接口 ，需要导入(import，即使同处于一个包中)</li>
+<li>实现android.os.Parcelable 接口的类的对象. 需要导入(import，即使同处于一个包中)，且必须新建一个与其同名的AIDL文件，并在文件中声明该类为Parcelable</li>
+</ul>
+<p>在接口定义好后，系统将为我们生成一个Java文件，AS下是在app\build\generated\source\aidl\debug目录下，生成的代码如下：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.vera.aidltest;</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">IMyAdd</span> <span class="keyword">extends</span> <span class="title">android</span>.<span class="title">os</span>.<span class="title">IInterface</span></span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line"><span class="comment">/** Local-side IPC implementation stub class. */</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">Stub</span> <span class="keyword">extends</span> <span class="title">android</span>.<span class="title">os</span>.<span class="title">Binder</span> <span class="keyword">implements</span> <span class="title">com</span>.<span class="title">vera</span>.<span class="title">aidltest</span>.<span class="title">IMyAdd</span></span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> java.lang.String DESCRIPTOR = <span class="string">"com.vera.aidltest.IMyAdd"</span>;</span><br><span class="line"><span class="comment">/** Construct the stub at attach it to the interface. */</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="title">Stub</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line"><span class="keyword">this</span>.attachInterface(<span class="keyword">this</span>, DESCRIPTOR);</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">* Cast an IBinder object into an com.vera.aidltest.IMyAdd interface,</span></span><br><span class="line"><span class="comment">* generating a proxy if needed.</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> com.vera.aidltest.<span class="function">IMyAdd <span class="title">asInterface</span><span class="params">(android.os.IBinder obj)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line"><span class="keyword">if</span> ((obj==<span class="keyword">null</span>)) &#123;</span><br><span class="line"><span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">&#125;</span><br><span class="line">android.os.IInterface iin = obj.queryLocalInterface(DESCRIPTOR);</span><br><span class="line"><span class="keyword">if</span> (((iin!=<span class="keyword">null</span>)&amp;&amp;(iin <span class="keyword">instanceof</span> com.vera.aidltest.IMyAdd))) &#123;</span><br><span class="line"><span class="keyword">return</span> ((com.vera.aidltest.IMyAdd)iin);</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">return</span> <span class="keyword">new</span> com.vera.aidltest.IMyAdd.Stub.Proxy(obj);</span><br><span class="line">&#125;</span><br><span class="line"><span class="meta">@Override</span> <span class="keyword">public</span> android.os.<span class="function">IBinder <span class="title">asBinder</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line"><span class="keyword">return</span> <span class="keyword">this</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="meta">@Override</span> <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">onTransact</span><span class="params">(<span class="keyword">int</span> code, android.os.Parcel data, android.os.Parcel reply, <span class="keyword">int</span> flags)</span> <span class="keyword">throws</span> android.os.RemoteException</span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line"><span class="keyword">switch</span> (code)</span><br><span class="line">&#123;</span><br><span class="line"><span class="keyword">case</span> INTERFACE_TRANSACTION:</span><br><span class="line">&#123;</span><br><span class="line">reply.writeString(DESCRIPTOR);</span><br><span class="line"><span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">case</span> TRANSACTION_myAdd:</span><br><span class="line">&#123;</span><br><span class="line">data.enforceInterface(DESCRIPTOR);</span><br><span class="line"><span class="keyword">int</span> _arg0;</span><br><span class="line">_arg0 = data.readInt();</span><br><span class="line"><span class="keyword">int</span> _arg1;</span><br><span class="line">_arg1 = data.readInt();</span><br><span class="line"><span class="keyword">int</span> _result = <span class="keyword">this</span>.myAdd(_arg0, _arg1);</span><br><span class="line">reply.writeNoException();</span><br><span class="line">reply.writeInt(_result);</span><br><span class="line"><span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">&#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">return</span> <span class="keyword">super</span>.onTransact(code, data, reply, flags);</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">Proxy</span> <span class="keyword">implements</span> <span class="title">com</span>.<span class="title">vera</span>.<span class="title">aidltest</span>.<span class="title">IMyAdd</span></span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line"><span class="keyword">private</span> android.os.IBinder mRemote;</span><br><span class="line">Proxy(android.os.IBinder remote)</span><br><span class="line">&#123;</span><br><span class="line">mRemote = remote;</span><br><span class="line">&#125;</span><br><span class="line"><span class="meta">@Override</span> <span class="keyword">public</span> android.os.<span class="function">IBinder <span class="title">asBinder</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line"><span class="keyword">return</span> mRemote;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">public</span> java.lang.<span class="function">String <span class="title">getInterfaceDescriptor</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line"><span class="keyword">return</span> DESCRIPTOR;</span><br><span class="line">&#125;</span><br><span class="line"><span class="meta">@Override</span> <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">myAdd</span><span class="params">(<span class="keyword">int</span> num_a, <span class="keyword">int</span> num_b)</span> <span class="keyword">throws</span> android.os.RemoteException</span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">android.os.Parcel _data = android.os.Parcel.obtain();</span><br><span class="line">android.os.Parcel _reply = android.os.Parcel.obtain();</span><br><span class="line"><span class="keyword">int</span> _result;</span><br><span class="line"><span class="keyword">try</span> &#123;</span><br><span class="line">_data.writeInterfaceToken(DESCRIPTOR);</span><br><span class="line">_data.writeInt(num_a);</span><br><span class="line">_data.writeInt(num_b);</span><br><span class="line">mRemote.transact(Stub.TRANSACTION_myAdd, _data, _reply, <span class="number">0</span>);</span><br><span class="line">_reply.readException();</span><br><span class="line">_result = _reply.readInt();</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">finally</span> &#123;</span><br><span class="line">_reply.recycle();</span><br><span class="line">_data.recycle();</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">return</span> _result;</span><br><span class="line">&#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> TRANSACTION_myAdd = (android.os.IBinder.FIRST_CALL_TRANSACTION + <span class="number">0</span>);</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">myAdd</span><span class="params">(<span class="keyword">int</span> num_a, <span class="keyword">int</span> num_b)</span> <span class="keyword">throws</span> android.os.RemoteException</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>代码很长很凌乱的样子……嗯，本节我们先不看它，只需要知道它是根据AIDL文件生成的一个接口IMyAdd，包含一个继承自Binder的静态内部抽象类Stub（咦，这么连起来说总有哪里怪怪的……），并且声明了myAdd()方法。为什么是抽象类呢，因为它实现了IMyAdd接口却并没有真正实现，那放到哪里实现呢？当然是我们的服务端咯。</p>
+<p>接下来，我们可以就可以来写客户端和服务端的代码了，那么，我们这里的客户端和服务端指的是什么呢？就本例来说，它们分别是一个Activity和一个Service，这里我们将它们放在了同一个应用中，只不过通过某种方法使其运行在不同的进程。更多情况下它们并不运行在同一个应用中，这时候我们需要将整个aidl文件夹的内容复制一份，这是因为客户端和服务端的AIDL包结构需要保持一致，否则将会出现反序列化不成功的结果，那么跨进程通信将无法进行。</p>
+<p>那么我们现在开始写服务端的代码，新建一个Service名为ServerService如下：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.vera.aidltest;</span><br><span class="line"><span class="keyword">import</span> android.app.Service;</span><br><span class="line"><span class="keyword">import</span> android.content.Intent;</span><br><span class="line"><span class="keyword">import</span> android.os.Binder;</span><br><span class="line"><span class="keyword">import</span> android.os.IBinder;</span><br><span class="line"><span class="keyword">import</span> android.os.RemoteException;</span><br><span class="line"><span class="keyword">import</span> android.util.Log;</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ServerService</span> <span class="keyword">extends</span> <span class="title">Service</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> Binder mBinder=<span class="keyword">new</span> IMyAdd.Stub()&#123;</span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">myAdd</span><span class="params">(<span class="keyword">int</span> num_a, <span class="keyword">int</span> num_b)</span> <span class="keyword">throws</span> RemoteException </span>&#123;</span><br><span class="line">            <span class="keyword">int</span> result=num_a+num_b;</span><br><span class="line">            Log.d(<span class="string">"ServerService"</span>,<span class="string">"the result of "</span>+num_a+<span class="string">" and "</span>+num_b+<span class="string">" is "</span>+result);</span><br><span class="line">            <span class="keyword">return</span> result;</span><br><span class="line">        &#125;</span><br><span class="line">        &#125;;</span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> IBinder <span class="title">onBind</span><span class="params">(Intent intent)</span> </span>&#123;</span><br><span class="line">            <span class="keyword">return</span> mBinder;</span><br><span class="line">        &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>ServerService很简单，它只是创建了一个Binder对象并在onBinder()方法中将其返回。该Binder对象就是我们实现了接口方法的Stub对象。好啦，现在我们可以在myAdd()方法中愉快地进行我们的操作啦。在这里我们只是得到num_a和num_b的和并将其打印，最后再返回结果。</p>
+<p>另外，我们需要将该Service设置在一个独立的进程中，不然还怎么玩跨进程通信~<br>更改AndroidManifest.xml如下：<br><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">service</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:name</span>=<span class="string">".ServerService"</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:process</span>=<span class="string">":remote"</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">service</span>&gt;</span></span><br></pre></td></tr></table></figure></p>
+<p>好了，服务端的创建已经完成啦，我们现在来看客户端。客户端要做些什么呢？，我们来看代码：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.vera.aidltest;</span><br><span class="line"><span class="keyword">import</span> android.content.ComponentName;</span><br><span class="line"><span class="keyword">import</span> android.content.Context;</span><br><span class="line"><span class="keyword">import</span> android.content.Intent;</span><br><span class="line"><span class="keyword">import</span> android.content.ServiceConnection;</span><br><span class="line"><span class="keyword">import</span> android.os.Bundle;</span><br><span class="line"><span class="keyword">import</span> android.os.IBinder;</span><br><span class="line"><span class="keyword">import</span> android.os.RemoteException;</span><br><span class="line"><span class="keyword">import</span> android.support.v7.app.AppCompatActivity;</span><br><span class="line"><span class="keyword">import</span> android.util.Log;</span><br><span class="line"><span class="keyword">import</span> android.view.View;</span><br><span class="line"><span class="keyword">import</span> android.widget.Button;</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ClientActivity</span> <span class="keyword">extends</span> <span class="title">AppCompatActivity</span> </span>&#123;</span><br><span class="line">    Button mButton;</span><br><span class="line">    <span class="keyword">private</span> ServiceConnection myConnection=<span class="keyword">new</span> ServiceConnection() &#123;</span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onServiceConnected</span><span class="params">(ComponentName componentName, IBinder iBinder)</span> </span>&#123;</span><br><span class="line">                IMyAdd mMyAdd=IMyAdd.Stub.asInterface(iBinder);</span><br><span class="line">                <span class="keyword">try</span> &#123;</span><br><span class="line">                    <span class="keyword">int</span> result=mMyAdd.myAdd(<span class="number">1</span>,<span class="number">2</span>);</span><br><span class="line">                    Log.d(<span class="string">"ClientActivity"</span>,<span class="string">"get the result is "</span>+result);</span><br><span class="line">                &#125; <span class="keyword">catch</span> (RemoteException e) &#123;</span><br><span class="line">                    e.printStackTrace();</span><br><span class="line">                &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onServiceDisconnected</span><span class="params">(ComponentName componentName)</span> </span>&#123;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">onCreate</span><span class="params">(Bundle savedInstanceState)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>.onCreate(savedInstanceState);</span><br><span class="line">        setContentView(R.layout.activity_client);</span><br><span class="line">        mButton=(Button)findViewById(R.id.activity_client_mbutton);</span><br><span class="line">        mButton.setOnClickListener(<span class="keyword">new</span> View.OnClickListener() &#123;</span><br><span class="line">                            <span class="meta">@Override</span></span><br><span class="line">                            <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onClick</span><span class="params">(View view)</span> </span>&#123;</span><br><span class="line">                                Intent intent=<span class="keyword">new</span> Intent(ClientActivity.<span class="keyword">this</span>,ServerService.class);</span><br><span class="line">                                bindService(intent,myConnection, Context.BIND_AUTO_CREATE);</span><br><span class="line">                            &#125;&#125;);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">onDestroy</span><span class="params">()</span></span>&#123;</span><br><span class="line">        unbindService(myConnection);</span><br><span class="line">        <span class="keyword">super</span>.onDestroy();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>首先，我们创建了一个ServiceConnection的匿名类并实例化一个对象，然后，我们又设置了在Button点击之后通过bindService()方法绑定服务。bindService()方法接收三个参数，第一个是在这之前我们创建的Intent对象，第二个是ServiceConnection的实例对象，第三个参数是一个标志位，BIND_AUTO_CREATE表示在Activity和Service进行绑定后，服务将自动创建。然后我们重写了onDestroy()方法，将Activity和Service解除绑定。</p>
+<p>重点是在创建的ServiceConnection匿名类里！在这个类里我们重写了onServiceConnected()方法和onServiceDisconnected()方法,这两个方法分别会在Activity与Service成功绑定和解除绑定的时候调用。在onServiceConnected()方法里，我们调用了Stub()的asInterface()方法,该方法返回一个Binder代理对象，并向上转型成为客户端接受的AIDL接口类型的对象！</p>
+<p>好啦，拿到了这个对象，现在只差一步调用方法的事啦，我们来试一试1+2等于多少叭~</p>
+<p>运行程序，在点击Button之后，查看日志打印信息，如下图：</p>
+<p><img src="/img/03.png" alt=""></p>
+<p>在com.vera.aidltest进程中，客户端打印出得到的结果为3,在com.vera.aidltest:remote进程中，服务端打印出1+2等于3，通信成功啦！</p>
+<p>嗯好，那我们来总结一下，具体的步骤吧：</p>
+<ul>
+<li>首先建立一个AIDL文件，在其中定义一个接口，接口中应包含我们希望服务端实现的方法的声明。</li>
+<li>其次，在服务端中将实现好方法的Stub对象通过onBind()方法返回</li>
+<li>最后，在客户端中将服务绑定，并重写ServiceConnection类中的方法，在其中获得Binder对象，调用服务端的接口方法。</li>
+</ul>
+<p>这其中我们屏蔽了很多细节，只谈了使用方法，下一节婷子会把更具体的部分再贴出来，第一篇技术博客，有什么不对的地方还请留言哦，么么哒~</p>
+
+        
+        <div id="comment-container">
+        </div>
+    </div>
+</div>
+    </div>
+</div>
+
+
+<footer class="footer">
+    <ul class="list-inline text-center">
+        
+        
+
+        
+
+        
+
+        
+
+        
+
+    </ul>
+    
+    <p>
+        <span id="busuanzi_container_site_pv">
+            <span id="busuanzi_value_site_pv"></span>PV
+        </span>
+        <span id="busuanzi_container_site_uv">
+            <span id="busuanzi_value_site_uv"></span>UV
+        </span>
+        Created By <a href="https://hexo.io/">Hexo</a>  Theme <a href="https://github.com/aircloud/hexo-theme-aircloud">AirCloud</a></p>
+</footer>
+
+
+
+
+</body>
+
+<script>
+    // We expose some of the variables needed by the front end
+    window.hexo_search_path = "search.json"
+    window.hexo_root = "/"
+    window.isPost = true
+</script>
+<script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script>
+<script src="/js/index.js"></script>
+<script async src="//dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+</html>
